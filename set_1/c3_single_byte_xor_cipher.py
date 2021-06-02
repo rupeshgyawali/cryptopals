@@ -41,15 +41,14 @@ def text_score(text: str) -> int:
     valid english text.
     """
     # TODO: Look for better text scoring algorithms.
-    text_length = len(text)
-    frequency_order = 'etaoinsrhldcumfpgwybvkxjqz'
+    frequency_order = ' etaoinsrhldcumfpgwybvkxjqz'
     score = 0
     for c in text:
         pos = frequency_order.find(c.lower())
         if(pos == -1):
             score += pos
         else:
-            score += (text_length - pos)
+            score += (27 - pos)
     
     return score
 
