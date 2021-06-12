@@ -76,15 +76,16 @@ def padding_oracle_attack(padding_oracle: CBCPaddingOracle, ciphertext: bytes, i
             # that are already cracked.
             ecb_decrypted = xor(plain_block, previous_block[current_byte_index+1:])
             # For cracking each byte in a block, we take every possible byte flip in previous cipher block.
+            random_iv = os.urandom(AES.BLOCK_SIZE)
             for k in range(1, 256):
-                # For each byte, take pervious cipher block bytes upto that byte, filp the byte. 
+                # For each byte, take random iv bytes upto that byte, filp the byte. 
                 # So there is identical byte filp in plaintext.
-                previous_block_tampered = previous_block[:-(j+1)] + bytes([k])
-                # All the remaining bytes for previous cipher block are flipped so that valid padding
+                iv_playload = random_iv[:-(j+1)] + bytes([k])
+                # All the remaining bytes for playload are flipped so that valid padding
                 # would be produced.
-                previous_block_tampered += xor(ecb_decrypted, bytes([j+1])*j)
+                iv_playload += xor(ecb_decrypted, bytes([j+1])*j)
                 # Check if byte filps makes padding valid
-                is_valid = padding_oracle.decrypt_and_check(current_block, previous_block_tampered)
+                is_valid = padding_oracle.decrypt_and_check(current_block, iv_playload)
                 if is_valid:
                     # Slice object for obtaining current byte. We perform slicing instead of indexing
                     # because we donot want integer when the cipher block is indexed; we want single byte.
@@ -92,7 +93,7 @@ def padding_oracle_attack(padding_oracle: CBCPaddingOracle, ciphertext: bytes, i
 
                     ecb_decrypted_plain_byte = xor(bytes([j+1]), bytes([k]))
                     plain_byte = xor(ecb_decrypted_plain_byte, previous_block[byte_index])
-                    # Since craking is done from last byte to first, cracked byte is added before
+                    # Since craking is done from last byte to first, cracked byte is added at first
                     plain_block = plain_byte + plain_block
                     break
 
@@ -100,7 +101,6 @@ def padding_oracle_attack(padding_oracle: CBCPaddingOracle, ciphertext: bytes, i
         previous_block = current_block
 
     return plaintext
-
 
 
 if __name__ == '__main__':
